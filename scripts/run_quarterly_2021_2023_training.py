@@ -336,6 +336,7 @@ def _apply_global_updates(
         rule = rules_by_id[rule_id]
         field = suggestion["field"]
         previous_value = _read_rule_field(rule, field)
+        print(f"导致错误的 suggestion 内容: {suggestion}")
         new_value = _normalize_update_value(rule, field, suggestion["new_value"])
         if previous_value == new_value:
             continue
@@ -382,6 +383,12 @@ def _normalize_update_value(rule: dict[str, Any], field: str, new_value: Any) ->
             raise SchemaValidationError("operating_metric_links must be a non-empty string list.")
         return [item.strip() for item in new_value]
     if field == "component_impacts":
+        if isinstance(new_value, str):
+            import json
+            try:
+                new_value = json.loads(new_value)
+            except json.JSONDecodeError:
+                raise SchemaValidationError("component_impacts must be a valid JSON list string.")
         if not isinstance(new_value, list) or not new_value:
             raise SchemaValidationError("component_impacts must be a non-empty list.")
         normalized = []
